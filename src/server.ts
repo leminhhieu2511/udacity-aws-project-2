@@ -29,25 +29,23 @@ import { filterImageFromURL, deleteLocalFiles } from './util/util';
   /**************************************************************************** */
   //! END @TODO1
 
-  app.get("/filteredimage", async (req , res) => {
+  app.get("/filteredimage", async (req, res) => {
     console.log("Start validate the image_url query");
 
     let image_url = req.query.image_url;
 
-    const isImageUrlValid = image_url.match(/(http(s)?:\/\/.)?(www\.)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*)/g);
-    
+    const isImageUrlValid = image_url.match(/(http(s?):)([/|.|\w|\s|-])*\.(?:jpg|gif|png)/g);
+
     if (isImageUrlValid == null) {
       return res.status(400).send('Invalid url');
     } else {
       const filteredImage = await filterImageFromURL(image_url);
-      if(filteredImage == null || filteredImage == undefined) {
+      if (filteredImage == null || filteredImage == undefined) {
         return res.status(400).send('Cannot filtered image from: ' + + image_url);
       } else {
-        res.sendFile(filteredImage);
-        console.log('Completed to filtered image from: ' + image_url);
-        deleteLocalFiles([filteredImage]);
-        console.log('Completed to delete local files from: ' + filteredImage);
-        return res.sendStatus(200);
+        return res.sendFile(filteredImage, function () {
+          deleteLocalFiles([filteredImage]);
+        });
       }
     }
   })
